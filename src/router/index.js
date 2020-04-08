@@ -42,8 +42,9 @@ const routes = [
           next();
         })
         .catch(err => {
-          if(from.name) alert('Join Failed');
+          //if(from.name) this.$swal("Join Failed", "", "error");
           
+
           console.log(err);
           router.push('/');
         });

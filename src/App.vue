@@ -1,7 +1,5 @@
 <template>
-  
   <v-app id="inspire">
-
     <div>
       <v-app-bar color="indigo" dark>
         <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
@@ -12,7 +10,7 @@
 
         <!-- <v-btn icon>
           <v-icon>mdi-heart</v-icon>
-        </v-btn> -->
+        </v-btn>-->
 
         <v-btn icon>
           <v-icon>mdi-magnify</v-icon>
@@ -38,13 +36,13 @@
       <v-toolbar color="indigo" dark>
         <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
 
-        <v-toolbar-title>Active Users</v-toolbar-title>
+        <v-toolbar-title class="ml-3">Room Users</v-toolbar-title>
 
         <v-spacer></v-spacer>
 
-        <v-btn icon>
+        <!-- <v-btn icon>
           <v-icon>mdi-magnify</v-icon>
-        </v-btn>
+        </v-btn>-->
       </v-toolbar>
 
       <v-list three-line>
@@ -64,88 +62,86 @@
             </v-list-item-content>
 
             <v-list-item-icon>
-              <v-icon class = "mr-10" color="green">mdi-circle</v-icon>
+              <v-icon class="mr-10" color="green">mdi-circle</v-icon>
             </v-list-item-icon>
-
           </v-list-item>
         </template>
       </v-list>
     </v-navigation-drawer>
-    
 
     <router-view></router-view>
 
     <!-- <v-content>
       <FrontPage />
-    </v-content> -->
-    
+    </v-content>-->
   </v-app>
-
-  
 </template>
 
 <script>
 //import FrontPage from "./components/FrontPage";
+import io from "socket.io-client";
+import { hostname } from "./assets/variables";
+import axios from "axios";
 
 export default {
   name: "App",
 
-  components: {
-  },
+  components: {},
 
   data() {
     return {
       drawer: "false",
-      joinCode: '01688',
+      joinCode: "01688",
       role: null,
-      items: [
-        { header: "Online" },
-        {
-          avatar: "https://cdn.vuetifyjs.com/images/lists/2.jpg",
-          title: "Ferdous Mahmud",
-          role: "Interviewer"
-        },
-        { divider: true, inset: true },
-        {
-          avatar: "https://cdn.vuetifyjs.com/images/lists/2.jpg",
-          title: "Raihan Ullah",
-          role: "Interviewer"
-        },
-        { divider: true, inset: true },
-        {
-          avatar: "https://cdn.vuetifyjs.com/images/lists/2.jpg",
-          title: "Uttom Akash",
-          role: "Interviewer"
-        },
-        { divider: true, inset: true },
-        {
-          avatar: "https://cdn.vuetifyjs.com/images/lists/2.jpg",
-          title: "Nafis Fuad",
-          role: "Candidate"
-        },
-        { divider: true, inset: true },
-        {
-          avatar: "https://cdn.vuetifyjs.com/images/lists/2.jpg",
-          title: "Ibnul Tahsin",
-          role: "Interviewer"
-        }
-      ]
+      socket: null,
+      items: [{ header: "Online" }]
     };
   },
   created() {
     this.drawer = false;
     //localStorage.setItem('joinCode','01688');
-    //localStorage.setItem('role','Interviewer');    
+    //localStorage.setItem('role','Interviewer');
   },
-  methods:{
-    submitClicked(){
-        
-    },
-    logoutButton(){
-      localStorage.removeItem('username');
-      localStorage.removeItem('joinCode');
-      localStorage.removeItem('role');
-      this.$router.push('/');
+  mounted() {
+    this.socket = io.connect(hostname);
+
+    this.socket.on("online-users", data => {
+      this.items = [{ header: "Online" }];
+
+      console.log("yesssssssssssssss");
+      data.forEach(item => {
+        this.items.push({
+          avatar: "https://cdn.vuetifyjs.com/images/lists/2.jpg",
+          title: item.username,
+          role: item.role
+        });
+        this.items.push({ divider: true, inset: true });
+      });
+    });
+  },
+  methods: {
+    submitClicked() {},
+    logoutButton() {
+      const username = localStorage.getItem("username");
+      const joinCode = localStorage.getItem("joinCode");
+      const role = localStorage.getItem("role");
+
+      axios
+        .get(
+          hostname +
+            "/logout?username=" +
+            username +
+            "&code=" +
+            joinCode +
+            "&role=" +
+            role
+        )
+        .then(() => {
+          localStorage.removeItem("username");
+          localStorage.removeItem("joinCode");
+          localStorage.removeItem("role");
+          this.$router.push("/");
+        });
     }
   }
 };

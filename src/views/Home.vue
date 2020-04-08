@@ -296,6 +296,7 @@ export default {
       this.addQuestionButtonVisible = true;
     else this.addQuestionButtonVisible = false;
 
+    
     this.socket = io.connect(hostname);
 
     this.socket.on("chat", data => {
@@ -426,7 +427,7 @@ export default {
       else this.questionBox = [];
 
       this.questionEditBox = data.question;
-      
+
       if (this.questionBox.length) {
         if (this.panel.find(x => x != 0)) this.panel.push(0);
       }
