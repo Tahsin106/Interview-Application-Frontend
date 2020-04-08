@@ -326,7 +326,6 @@ export default {
         role: role
       });
 
-      //this.logs.push(me+': '+this.msg);
       this.msg = "";
     },
     testClick() {
@@ -346,7 +345,6 @@ export default {
           }
         )
         .then(res => {
-          //console.log(res.data);
           setTimeout(() => {
             axios
               .get(
@@ -358,7 +356,6 @@ export default {
                 this.progress = false;
 
                 if (res.data.status.description == "Accepted") {
-                  // console.log(res.data.stdout);
                   this.outputBox = res.data.stdout.split("\n");
 
                   if (this.panel.find(x => x != 2)) {

@@ -19,9 +19,7 @@
 
     <v-row justify="center">
       <v-dialog v-model="dialog" persistent max-width="600px">
-        <!-- <template v-slot:activator="{ on }">
-        <v-btn color="primary" dark v-on="on">Open Dialog</v-btn>
-        </template>-->
+      
         <v-card>
           <v-card-title class="justify-center">
             <div class="mt-3">
@@ -102,7 +100,6 @@ export default {
   methods: {
     joinClicked() {
       this.dialog = true;
-      //this.$router.push("/home");
     },
     joinFormButton() {
       this.dialog = false;
@@ -126,11 +123,6 @@ export default {
         )
         .then(res => {
           console.log(res.data);
-          //this.swal('Welcome '+username);
-          // this.socket.emit('users',{
-          //     username:username,
-          //     role:role
-          // });
           this.$router.push("/home");
         })
         .catch(err => {
@@ -151,7 +143,7 @@ export default {
     localStorage.removeItem("joinCode");
     localStorage.removeItem("role");
 
-    //this.socket.emit('users');
+    
   }
 };
 </script>

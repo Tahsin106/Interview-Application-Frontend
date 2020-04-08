@@ -8,18 +8,10 @@
 
         <v-spacer></v-spacer>
 
-        <!-- <v-btn icon>
-          <v-icon>mdi-heart</v-icon>
-        </v-btn>-->
-
-        <v-btn icon>
-          <v-icon>mdi-magnify</v-icon>
-        </v-btn>
-
         <v-menu left bottom>
           <template v-slot:activator="{ on }">
             <v-btn icon v-on="on">
-              <v-icon>mdi-dots-vertical</v-icon>
+              <v-icon>mdi-dots-horizontal</v-icon>
             </v-btn>
           </template>
 
@@ -40,9 +32,7 @@
 
         <v-spacer></v-spacer>
 
-        <!-- <v-btn icon>
-          <v-icon>mdi-magnify</v-icon>
-        </v-btn>-->
+    
       </v-toolbar>
 
       <v-list three-line>
@@ -99,8 +89,6 @@ export default {
   },
   created() {
     this.drawer = false;
-    //localStorage.setItem('joinCode','01688');
-    //localStorage.setItem('role','Interviewer');
   },
   mounted() {
     this.socket = io.connect(hostname);
@@ -108,7 +96,6 @@ export default {
     this.socket.on("online-users", data => {
       this.items = [{ header: "Online" }];
 
-      console.log("yesssssssssssssss");
       data.forEach(item => {
         this.items.push({
           avatar: "https://cdn.vuetifyjs.com/images/lists/2.jpg",
