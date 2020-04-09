@@ -19,7 +19,6 @@
 
     <v-row justify="center">
       <v-dialog v-model="dialog" persistent max-width="600px">
-      
         <v-card>
           <v-card-title class="justify-center">
             <div class="mt-3">
@@ -53,7 +52,7 @@
                 <v-col cols="12" sm="6">
                   <v-select
                     v-model="role"
-                    :items="['Interviewer', 'Candidate']"
+                    :items="['Interviewer', 'Candidate', 'Admin']"
                     :rules="[v => !!v || 'Role is required']"
                     label="Role"
                     required
@@ -61,7 +60,7 @@
                 </v-col>
               </v-row>
             </v-form>
-            <small>*indicates required field</small>
+            <small>*If you are entering as an Admin you are creating a Room with above Room Code</small>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -75,8 +74,8 @@
 </template>
 
 <script>
-import io from "socket.io-client";
-import { hostname } from "../assets/variables";
+//import io from "socket.io-client";
+import { hostname, socket } from "../assets/variables";
 import axios from "axios";
 
 export default {
@@ -114,20 +113,18 @@ export default {
       axios
         .get(
           hostname +
-            "/join?username=" +
+            "/join_room?username=" +
             username +
             "&code=" +
             joinCode +
             "&role=" +
             role
         )
-        .then(res => {
-          console.log(res.data);
+        .then(() => {
           this.$router.push("/home");
         })
-        .catch(err => {
-          console.log(err);
-          this.$swal("Join Failed", "", "error");
+        .catch((err) => {
+          this.$swal(err.response.data, "", "error");
         });
     }
     // validateForm() {
@@ -136,14 +133,16 @@ export default {
   },
   created() {
     //console.log("this: " + hostname);
-    this.socket = io.connect(hostname);
+    //this.socket = io.connect(hostname);
+    var roomCode = localStorage.getItem("joinCode");
 
-   
+    socket.emit("join-connect", {
+      roomCode: roomCode
+    });
+
     localStorage.removeItem("username");
     localStorage.removeItem("joinCode");
     localStorage.removeItem("role");
-
-    
   }
 };
 </script>

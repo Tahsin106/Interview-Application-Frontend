@@ -18,7 +18,7 @@
                       </span>
                     </template>
 
-                    <div class="mt-9">
+                    <div class="mt-5">
                       <v-btn
                         v-if="addQuestionButtonVisible"
                         @click="editDialog = true"
@@ -107,29 +107,30 @@
               <v-card-text>
                 <v-list ref="chat" id="logs">
                   <template v-for="(item, index) in logs">
-                    <v-subheader v-if="item" :key="index">{{item.username}}: {{item.message}}</v-subheader>
+                    <v-subheader v-if="item" :key="index">
+                      <p class="font-weight-bold indigo--text body-1">{{item.username}}:</p>
+                      <p class = "body-1 black--text" style = "margin-left: 3px">{{item.message}}</p>
+                    </v-subheader>
                   </template>
                 </v-list>
               </v-card-text>
               <v-card-actions>
-                <v-form @submit.prevent="submit">
-                  <v-layout row>
-                    <v-flex class="ml-5" xs12>
-                      <v-text-field v-model="msg" label="Message" single-line solo-inverted></v-text-field>
-                    </v-flex>
+                <v-row class="mt-1">
+                  <v-col cols="9" class="ml-5">
+                    <v-text-field v-on:keyup.enter="submit" v-model="msg" label="Message" single-line solo></v-text-field>
+                  </v-col>
 
-                    <v-flex class="ml-6" xs6 order-lg2>
-                      <v-btn dark class="mb-2" color="indigo" type="submit">
-                        <v-icon dark>mdi-send</v-icon>
-                      </v-btn>
-                    </v-flex>
-                  </v-layout>
+                  <v-col cols="2" class="mt-1">
+                    <v-btn medium dark color="indigo" @click="submit">
+                      <v-icon dark>mdi-send</v-icon>
+                    </v-btn>
+                  </v-col>
+                </v-row>
 
-                  <!-- <v-text-field v-model="msg" label="Message" single-line solo-inverted></v-text-field>
+                <!-- <v-text-field v-model="msg" label="Message" single-line solo-inverted></v-text-field>
                   <v-btn dark small color="indigo" type="submit">
                     <v-icon dark>mdi-send</v-icon>
-                  </v-btn>-->
-                </v-form>
+                </v-btn>-->
               </v-card-actions>
             </v-card>
           </v-flex>
@@ -219,8 +220,8 @@
 </template>
 
 <script>
-import io from "socket.io-client";
-import { hostname } from "../assets/variables";
+//import io from "socket.io-client";
+import { hostname, socket } from "../assets/variables";
 import { codemirror } from "vue-codemirror";
 import "codemirror/lib/codemirror.css";
 import "codemirror/mode/clike/clike.js";
@@ -234,12 +235,13 @@ export default {
   },
   data() {
     return {
+      sp: ' ',
+      msg_color:false,
       valid: true,
       addQuestionButtonVisible: false,
       dialog: false,
       editDialog: false,
       questionEditBox: null,
-      socket: null,
       progress: false,
       panel: [1],
       logs: [],
@@ -251,7 +253,7 @@ export default {
       inputBox: null,
       languageId: {
         C: "48",
-        "C++": "54",
+        "C++": "52",
         Java: "62",
         "Python 3": "71",
         "Python 2": "70",
@@ -277,6 +279,7 @@ export default {
           if (repeat == "triple") {
             //alert(cm.getLine(cm.getCursor().line).trim());
             this.msg = cm.getLine(cm.getCursor().line).trim();
+            this.msg_color = true;
             return { unti: "word" };
           } else if (repeat == "single") {
             return { unti: "char" };
@@ -292,20 +295,31 @@ export default {
       this.cmOptions.readOnly = false;
     else this.cmOptions.readOnly = true;
 
-    if (localStorage.getItem("role") == "Interviewer")
+    if (
+      localStorage.getItem("role") == "Interviewer" ||
+      localStorage.getItem("role") == "Admin"
+    )
       this.addQuestionButtonVisible = true;
     else this.addQuestionButtonVisible = false;
 
-    
-    this.socket = io.connect(hostname);
+    //this.socket = io.connect(hostname);
+    console.log(hostname);
+    var roomCode = localStorage.getItem("joinCode");
+    socket.emit("join", {
+      roomCode: roomCode
+    });
 
-    this.socket.on("chat", data => {
+    socket.emit("join-connect", {
+      roomCode: roomCode
+    });
+
+    socket.on("chat", data => {
       this.logs.push(data);
       // this.who.push(data.username);
       //console.log(data);
     });
 
-    this.socket.on("logs", data => {
+    socket.on("logs", data => {
       data.forEach(item => {
         this.logs.push(item);
       });
@@ -319,14 +333,17 @@ export default {
 
       var me = localStorage.getItem("username");
       var role = localStorage.getItem("role");
+      var roomCode = localStorage.getItem("joinCode");
 
-      this.socket.emit("chat", {
+      socket.emit("chat", {
         username: me,
         message: this.msg,
-        role: role
+        role: role,
+        roomCode: roomCode
       });
 
       this.msg = "";
+      this.msg_color = false;
     },
     testClick() {
       this.dialog = true;
@@ -372,7 +389,7 @@ export default {
                 this.progress = false;
                 console.log(err);
               });
-          }, 4000);
+          }, 3000);
         })
         .catch(err => {
           this.progress = false;
@@ -383,9 +400,11 @@ export default {
     },
     questionSubmitButton() {
       this.editDialog = false;
+      var roomCode = localStorage.getItem("joinCode");
 
-      this.socket.emit("question", {
-        question: this.questionEditBox
+      socket.emit("question", {
+        question: this.questionEditBox,
+        roomCode: roomCode
       });
 
       if (!this.questionEditBox) {
@@ -409,17 +428,19 @@ export default {
   mounted() {
     this.$refs.myCm.codemirror.on("keyup", () => {
       if (localStorage.getItem("role") == "Candidate") {
-        this.socket.emit("code", {
-          code: this.code
+        var roomCode = localStorage.getItem("joinCode");
+        socket.emit("code", {
+          code: this.code,
+          roomCode: roomCode
         });
       }
     });
 
-    this.socket.on("code-rcv", data => {
+    socket.on("code-rcv", data => {
       this.code = data.code;
     });
 
-    this.socket.on("question-rcv", data => {
+    socket.on("question-rcv", data => {
       if (data.question) this.questionBox = data.question.split("\n");
       else this.questionBox = [];
 

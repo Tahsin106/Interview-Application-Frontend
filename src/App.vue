@@ -16,7 +16,7 @@
           </template>
 
           <v-list>
-            <v-list-item v-for="n in 1" :key="n" @click="logoutButton">
+            <v-list-item  v-for="n in 1" :key="n" @click="logoutButton">
               <v-list-item-title>Log Out</v-list-item-title>
             </v-list-item>
           </v-list>
@@ -31,8 +31,6 @@
         <v-toolbar-title class="ml-3">Room Users</v-toolbar-title>
 
         <v-spacer></v-spacer>
-
-    
       </v-toolbar>
 
       <v-list three-line>
@@ -67,48 +65,59 @@
   </v-app>
 </template>
 
+
 <script>
 //import FrontPage from "./components/FrontPage";
-import io from "socket.io-client";
-import { hostname } from "./assets/variables";
+//import io from "socket.io-client";
+import { hostname, socket } from "./assets/variables";
 import axios from "axios";
 
 export default {
   name: "App",
-
+  
   components: {},
 
   data() {
     return {
       drawer: "false",
-      joinCode: "01688",
+      joinCode: "",
       role: null,
-      socket: null,
-      items: [{ header: "Online" }]
+      items: []
     };
   },
   created() {
     this.drawer = false;
   },
   mounted() {
-    this.socket = io.connect(hostname);
+    //this.socket = io.connect(hostname);
+    
+    var roomCode = localStorage.getItem("joinCode");
 
-    this.socket.on("online-users", data => {
-      this.items = [{ header: "Online" }];
+    socket.emit("join-connect", {
+       roomCode: roomCode
+    });
 
+    socket.on("online-users", data => {
+      this.items = [];
+
+      if(localStorage.getItem('username')){
       data.forEach(item => {
         this.items.push({
-          avatar: "https://cdn.vuetifyjs.com/images/lists/2.jpg",
+          avatar: "https://p7.hiclipart.com/preview/123/735/760/computer-icons-physician-login-medicine-user-avatar.jpg",
           title: item.username,
           role: item.role
         });
         this.items.push({ divider: true, inset: true });
       });
+      }
     });
   },
   methods: {
     submitClicked() {},
     logoutButton() {
+      this.items = [];
+      if(!localStorage.getItem("username")) return;
+
       const username = localStorage.getItem("username");
       const joinCode = localStorage.getItem("joinCode");
       const role = localStorage.getItem("role");
@@ -124,9 +133,9 @@ export default {
             role
         )
         .then(() => {
-          localStorage.removeItem("username");
-          localStorage.removeItem("joinCode");
-          localStorage.removeItem("role");
+          //localStorage.removeItem("username");
+          //localStorage.removeItem("joinCode");
+          //localStorage.removeItem("role");
           this.$router.push("/");
         });
     }
