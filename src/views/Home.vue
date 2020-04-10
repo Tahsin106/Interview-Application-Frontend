@@ -2,11 +2,15 @@
   <v-app>
     <v-content>
       <v-container fluid>
-        <v-layout row class="mr-12 mt-10" wrap justify-space-between>
+        <v-layout row class="mr-12 mt-10" wrap justify-start>
+          <!-- <v-col xs0 sm0 md1></v-col> -->
+          <!-- <v-col md = "1" lg = "1"></v-col> -->
           <v-flex xs0 sm0 md1></v-flex>
 
-          <v-flex xs12 sm8 md5 class="mt-1 mr-12">
-            <div style="width: 580px;">
+          <!-- Question+Code+Output -->
+          
+          <v-flex xs12 sm8 md5 class="mt-0 mr-12">
+            <div style="width: 585px;">
               <v-expansion-panels dark v-model="panel" multiple>
                 <v-expansion-panel>
                   <v-expansion-panel-header color="indigo">Question</v-expansion-panel-header>
@@ -18,7 +22,7 @@
                       </span>
                     </template>
 
-                    <div class="mt-5">
+                    <div class="mt-6">
                       <v-btn
                         v-if="addQuestionButtonVisible"
                         @click="editDialog = true"
@@ -55,7 +59,7 @@
                         right
                         small
                         color="indigo"
-                      >Test</v-btn>
+                      >Run</v-btn>
                       <v-btn
                         v-else
                         style="margin-right: 15px"
@@ -65,7 +69,7 @@
                         right
                         small
                         color="grey"
-                      >Test</v-btn>
+                      >Run</v-btn>
                     </div>
                   </v-expansion-panel-content>
                 </v-expansion-panel>
@@ -90,6 +94,10 @@
                       <span v-if="item" :key="index">
                         {{item}}
                         <br />
+                        <br />
+                        <span class="blue--text">Time: {{code_time}}s</span>
+                        <br />
+                        <span class="blue--text">Memory: {{code_memory}} KB</span>
                       </span>
                     </template>
                   </v-expansion-panel-content>
@@ -100,27 +108,55 @@
 
           <!-- Chat -->
           <v-flex xs12 sm8 md5 class="ml-12">
-            <v-card max-width="610px" class="elevation-12" color="indigo lighten-4">
+            <v-card height="676px" max-width="620px" class="elevation-12" color="indigo lighten-4">
               <v-toolbar dark color="indigo darken-1">
                 <v-toolbar-title>Messages</v-toolbar-title>
               </v-toolbar>
               <v-card-text>
                 <v-list ref="chat" id="logs">
                   <template v-for="(item, index) in logs">
-                    <v-subheader v-if="item" :key="index">
-                      <p class="font-weight-bold indigo--text body-1">{{item.username}}:</p>
-                      <p class = "body-1 black--text" style = "margin-left: 3px">{{item.message}}</p>
-                    </v-subheader>
+                    <v-icon v-if="!item.isSame" large color="blue" :key="'A'+index">person</v-icon>
+
+                    <span v-if="item" :key="index">
+                      <span
+                        style="margin-left: -3px"
+                        v-if="!item.isSame"
+                        class="font-weight-bold indigo--text body-1"
+                      >
+                        {{item.username}}
+                        <span class="grey--text body-2">{{item.time}}</span>
+                      </span>
+                      <p
+                        v-if="!item.isHighlight"
+                        class="body-1 black--text"
+                        style="margin-left: 38px"
+                        :style="item.isSame?'margin-top: -8px':'margin-top:-3px'"
+                      >{{item.message}}</p>
+                      <p
+                        v-else
+                        class="body-1 red--text"
+                        :style="item.isSame?'margin-top: -8px':'margin-top:-3px'"
+                        style="margin-left: 38px"
+                      >{{item.message}}</p>
+                    </span>
                   </template>
                 </v-list>
               </v-card-text>
               <v-card-actions>
-                <v-row class="mt-1">
+                <v-row class="mb-3">
                   <v-col cols="9" class="ml-5">
-                    <v-text-field v-on:keyup.enter="submit" v-model="msg" label="Message" single-line solo></v-text-field>
+                    <v-text-field
+                      v-on:keyup.enter="submit"
+                      @keypress="msg_color = null"
+                      v-model="msg"
+                      label="Message"
+                      single-line
+                      solo
+                      :class="{ 'my-text-style': msg_color}"
+                    ></v-text-field>
                   </v-col>
 
-                  <v-col cols="2" class="mt-1">
+                  <v-col cols="1" class="mt-1">
                     <v-btn medium dark color="indigo" @click="submit">
                       <v-icon dark>mdi-send</v-icon>
                     </v-btn>
@@ -143,7 +179,7 @@
             <v-card>
               <v-card-title class="justify-center">
                 <div class="mt-3">
-                  <span class="headline mt-4 font-regular ml-2">Test</span>
+                  <span class="headline mt-4 font-regular ml-2">Run</span>
                 </div>
               </v-card-title>
               <v-card-text>
@@ -235,8 +271,9 @@ export default {
   },
   data() {
     return {
-      sp: ' ',
-      msg_color:false,
+      img: "https://ca.slack-edge.com/T7HRW0NMA-USV4PCNQ0-g434f592e18d-72",
+      sp: " ",
+      msg_color: null,
       valid: true,
       addQuestionButtonVisible: false,
       dialog: false,
@@ -251,6 +288,8 @@ export default {
       questionBox: [],
       language: null,
       inputBox: null,
+      code_time: "Invalid",
+      code_memory: "Invalid",
       languageId: {
         C: "48",
         "C++": "52",
@@ -278,8 +317,12 @@ export default {
         configureMouse: (cm, repeat) => {
           if (repeat == "triple") {
             //alert(cm.getLine(cm.getCursor().line).trim());
-            this.msg = cm.getLine(cm.getCursor().line).trim();
-            this.msg_color = true;
+            this.msg =
+              1 +
+              cm.getCursor().line +
+              ": " +
+              cm.getLine(cm.getCursor().line).trim();
+            this.msg_color = "mdi-close";
             return { unti: "word" };
           } else if (repeat == "single") {
             return { unti: "char" };
@@ -291,6 +334,9 @@ export default {
     };
   },
   created() {
+    //var date = new Date();
+    //alert(date.getHours()+": "+("0"+date.getMinutes()).slice(-2));
+
     if (localStorage.getItem("role") == "Candidate")
       this.cmOptions.readOnly = false;
     else this.cmOptions.readOnly = true;
@@ -335,15 +381,26 @@ export default {
       var role = localStorage.getItem("role");
       var roomCode = localStorage.getItem("joinCode");
 
+      var isSame = false;
+      if (this.logs.length >= 1) {
+        if (me == this.logs[this.logs.length - 1].username) isSame = true;
+      }
+
+      var date = new Date();
+      var time = date.getHours() + ":" + ("0" + date.getMinutes()).slice(-2);
+
       socket.emit("chat", {
         username: me,
         message: this.msg,
         role: role,
-        roomCode: roomCode
+        roomCode: roomCode,
+        isHighlight: this.msg_color,
+        isSame: isSame,
+        time: time
       });
 
       this.msg = "";
-      this.msg_color = false;
+      this.msg_color = null;
     },
     testClick() {
       this.dialog = true;
@@ -373,6 +430,8 @@ export default {
                 this.progress = false;
 
                 if (res.data.status.description == "Accepted") {
+                  this.code_time = res.data.time;
+                  this.code_memory = res.data.memory;
                   this.outputBox = res.data.stdout.split("\n");
 
                   if (this.panel.find(x => x != 2)) {
@@ -389,7 +448,7 @@ export default {
                 this.progress = false;
                 console.log(err);
               });
-          }, 3000);
+          }, 4000);
         })
         .catch(err => {
           this.progress = false;
@@ -458,5 +517,8 @@ export default {
 #logs {
   height: 480px;
   overflow: auto;
+}
+.my-text-style >>> .v-text-field__slot input {
+  color: red;
 }
 </style>
