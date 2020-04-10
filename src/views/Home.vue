@@ -8,7 +8,7 @@
           <v-flex xs0 sm0 md1></v-flex>
 
           <!-- Question+Code+Output -->
-          
+
           <v-flex xs12 sm8 md5 class="mt-0 mr-12">
             <div style="width: 585px;">
               <v-expansion-panels dark v-model="panel" multiple>
@@ -448,7 +448,7 @@ export default {
                 this.progress = false;
                 console.log(err);
               });
-          }, 4000);
+          }, 3500);
         })
         .catch(err => {
           this.progress = false;

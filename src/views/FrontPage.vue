@@ -31,8 +31,9 @@
               <v-row>
                 <v-col cols="12">
                   <v-text-field
+                    prepend-icon="person"
                     v-model="username"
-                    label="Name*"
+                    label="Name"
                     :rules="nameRules"
                     :counter="15"
                     required
@@ -40,6 +41,7 @@
                 </v-col>
                 <v-col cols="12">
                   <v-text-field
+                    prepend-icon="lock"
                     v-model="joinCode"
                     label="Room Code Number*"
                     :rules="passRules"
@@ -51,6 +53,7 @@
 
                 <v-col cols="12" sm="6">
                   <v-select
+                    prepend-icon="security"
                     v-model="role"
                     :items="['Interviewer', 'Candidate', 'Admin']"
                     :rules="[v => !!v || 'Role is required']"
