@@ -485,6 +485,8 @@ export default {
     }
   },
   mounted() {
+    console.log(this.$refs);
+    
     this.$refs.myCm.codemirror.on("keyup", () => {
       if (localStorage.getItem("role") == "Candidate") {
         var roomCode = localStorage.getItem("joinCode");
